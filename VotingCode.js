@@ -96,13 +96,13 @@ class QuestionList extends React.Component {
 
 class TextForm extends React.Component {
   render() {
-    return ( <form>
+    return ( <div>
               {this.props.label ? this.props.label : null}
               <label>
                 <input type="text" value={this.props.formText} onChange={this.props.onChange} />      
                 {this.props.onRemove ? <button onClick = {this.props.onRemove}>X</button> : null}  
               </label>
-            </form>);
+            </div>);
   }
 }
 
