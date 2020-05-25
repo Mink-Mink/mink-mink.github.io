@@ -308,7 +308,8 @@ class TextForm extends React.Component {
               <label>
                 <input type = {this.props.inputType ? this.props.inputType : "text"} 
                         value={this.props.formText} 
-                        onChange={this.props.onChange} />      
+                        onChange={this.props.onChange}
+                        size = {this.props.formText.length}/>
                 {this.props.onRemove ? <button onClick = {this.props.onRemove}>X</button> : null}  
               </label>
             </div>);
