@@ -2,7 +2,7 @@
 
 let sum = (total, current) => {return Number(total) + Number(current)};
 const redColor = "#f44336";
-const greenColor = "#4CAF50";
+const greenColor = "#85ff89";
 const yellowColor = "#ffe600";
 
 function voteTokensToVotes(voteTokens) {
@@ -13,7 +13,7 @@ function voteTokensToVotes(voteTokens) {
 class App extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { questionsToDecide: [{text: "Abra", options: ["Kadanbra","Alakazam"]}, {text: "Pichu", options: ["Pickachu","Raichu"]}],
+    this.state = { questionsToDecide: [{text: "Best starter pokemon?", options: ["Charmander", "Squirtle", "Bulbasaur"]}, {text: "Best caffeinated drink?", options: ["Coffee","Tea"]}],
                    voterList: ["Voter 1", "Voter 2"],
                    voteBudget: 100,
                    currentVoterNumber: -1,
@@ -176,7 +176,7 @@ class App extends React.Component {
             <ol>
                 {this.state.voterList.map((voter, counter) => {
                     return (<li>
-                                <button onClick = {() => this.showVoterBallot(counter)} style = {{backgroundColor : this.getVoterButtonColor(counter)}}>{voter.name}</button>
+                                <button onClick = {() => this.showVoterBallot(counter)} style = {{"backgroundColor" : this.getVoterButtonColor(counter)}}>{voter.name}</button>
                             </li>);
                 })}
             </ol>
@@ -267,8 +267,11 @@ class VoteResults extends React.Component {
                 <p>{question.text}</p>
                 <ol>
                   {question.options.map((option, optionNumber) => {
-                    return <li>{option + "; Votes: " + String(this.props.voteTotals[Counter][optionNumber])}</li>;
-                  })}
+                    if (this.props.voteTotals[Counter][optionNumber] === Math.max(...this.props.voteTotals[Counter])) {
+                        return <li style = {{"backgroundColor" : greenColor}}>{option + "; Votes: " + String(this.props.voteTotals[Counter][optionNumber])}</li>;
+                    } else {
+                        return <li>{option + "; Votes: " + String(this.props.voteTotals[Counter][optionNumber])}</li>;
+                    }})}
                 </ol>
             </div>})}
         </div>);
