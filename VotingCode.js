@@ -1,6 +1,9 @@
 'use strict';
 
 let sum = (total, current) => {return Number(total) + Number(current)};
+const redColor = "#f44336";
+const greenColor = "#4CAF50";
+const yellowColor = "#ffe600";
 
 function voteTokensToVotes(voteTokens) {
   return Math.floor(Math.sqrt(voteTokens));
@@ -13,7 +16,8 @@ class App extends React.Component {
     this.state = { questionsToDecide: [{text: "Abra", options: ["Kadanbra","Alakazam"]}, {text: "Pichu", options: ["Pickachu","Raichu"]}],
                    voterList: ["Voter 1", "Voter 2"],
                    voteBudget: 100,
-                   voteState: -1 };
+                   currentVoterNumber: -1,
+                   voteState: "Setup"};
   }
 
   addVoteQuestion() {
@@ -82,7 +86,7 @@ class App extends React.Component {
                 optionVotes.fill(0);
                 return optionVotes})
       }});
-    this.setState({voteState: 0, voterList: this.state.voterList});
+    this.setState({currentVoterNumber: 0, voterList: this.state.voterList, voteState: "VoterSelection"});
   }
 
   onChangeVote( voterNumber, questionNumber, optionNumber, event) {
@@ -102,13 +106,14 @@ class App extends React.Component {
     return this.state.voterList[voterNumber].votes.reduce((total, current) => {return current.reduce(sum, 0) + total;} , 0);
   }
 
-  giveBallotToNextVoter() {
-    if ( this.getTotalVoteTokensSpent(this.state.voteState) > this.state.voteBudget) {
-      window.alert("Too many tokens spent! Spend less.");
-    } else {
-      this.state.voteState++;
-      this.setState({voteState: this.state.voteState});
-    }
+  countUpTheVote() {
+      let voteFinished = false;
+      if (!this.state.voterList.every((voter) => {return voter.remainingVoteBudget === 0;})) {
+        voteFinished = confirm("Some voters have unspent vote tokens; Are you sure you want to close the vote?");
+      }
+      if (voteFinished) {
+        this.setState({voteState: "VoteCount"});
+      }
   }
 
   calculateTotalVotes() {
@@ -127,11 +132,30 @@ class App extends React.Component {
 
   resetVote() {
     this.state.voterList = this.state.voterList.map((voter) => {return voter.name}); 
-    this.setState({voteState: -1, voterList: this.state.voterList});
+    this.setState({currentVoterNumber: -1, voterList: this.state.voterList, voteState: "Setup"});
+  }
+
+  getVoterButtonColor(voterNumber) {
+      let currentVoter = this.state.voterList[voterNumber];
+      if (currentVoter.remainingVoteBudget > 0) {
+          return yellowColor;
+      } else if (currentVoter.remainingVoteBudget === 0) {
+          return greenColor;
+      } else if (currentVoter.remainingVoteBudget < 0 ) {
+          return redColor;
+      }
+  }
+
+  returnToVoterSelection() {
+      this.setState({voteState: "VoterSelection"});
+  }
+
+  showVoterBallot(voterNumber) {
+      this.setState({currentVoterNumber: voterNumber, voteState: "Vote"});
   }
 
   render() {
-    if (this.state.voteState === -1) {
+    if (this.state.voteState === "Setup") {
       return (<div>
         <QuestionList questions = {this.state.questionsToDecide} 
                       onAddQuestion = {() => {this.addVoteQuestion()}}
@@ -147,14 +171,25 @@ class App extends React.Component {
         <VotingBudget voteBudget = {this.state.voteBudget} onChange = {(e) => {this.onEditVoteTotal(e)}}/>
         <button onClick={() => {this.startVote()}}>Start the vote</button>
       </div>);
-    } else if (this.state.voteState < this.state.voterList.length) {
-      let currentVoter = this.state.voterList[this.state.voteState];
+    } else if (this.state.voteState === "VoterSelection") {
+        return (<div>
+            <ol>
+                {this.state.voterList.map((voter, counter) => {
+                    return (<li>
+                                <button onClick = {() => this.showVoterBallot(counter)} style = {{backgroundColor : this.getVoterButtonColor(counter)}}>{voter.name}</button>
+                            </li>);
+                })}
+            </ol>
+            <button onClick = {() => {this.countUpTheVote()}}>Count the votes</button>
+        </div>);
+    } else if (this.state.voteState === "Vote") {
+      let currentVoter = this.state.voterList[this.state.currentVoterNumber];
       return (<div>
         <p>Currently voting {currentVoter.name}. Vote budget left: {currentVoter.remainingVoteBudget}</p>
         <Ballot questions = {this.state.questionsToDecide} 
-                onChangeVote = {(quest, opt, e) => {this.onChangeVote(this.state.voteState, quest, opt, e)}}
+                onChangeVote = {(quest, opt, e) => {this.onChangeVote(this.state.currentVoterNumber, quest, opt, e)}}
                 votes = {currentVoter.votes}/>
-        <button onClick={() => {this.giveBallotToNextVoter()}}>Submit the vote</button>
+        <button onClick={() => {this.returnToVoterSelection()}} style = {{"backgroundColor" : this.getVoterButtonColor(this.state.currentVoterNumber)}}>Submit the vote</button>
       </div>);
     } else {
       const voteTotals = this.calculateTotalVotes();
